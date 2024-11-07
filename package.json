@@ -1,5 +1,5 @@
 {
-  "name": "tsrpc",
+  "name": "zo-tsrpc",
   "version": "3.4.16",
   "description": "A TypeScript RPC Framework, with runtime type checking and built-in serialization, support both HTTP and WebSocket.",
   "main": "index.js",

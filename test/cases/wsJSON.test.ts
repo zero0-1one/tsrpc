@@ -643,7 +643,7 @@ describe('WS JSON Server & Client basic', function () {
                 });
 
                 setTimeout(() => {
-                    client.logger?.log('sn', sn, name, abort, ret)
+                    client.logger?.log({ sn, name, abort, ret })
                     if (abort) {
                         assert.strictEqual(ret, undefined);
                     }
@@ -827,7 +827,7 @@ describe('WS JSON Server & Client basic', function () {
         while (Date.now() - now < 100) { }
         console.log('延迟结束')
 
-        client.logger?.log('lastHeartbeatLatency', client.lastHeartbeatLatency);
+        client.logger?.log('lastHeartbeatLatency %s', client.lastHeartbeatLatency);
         assert.strictEqual(client.status, WsClientStatus.Opened)
         assert.ok(client.lastHeartbeatLatency > 0, `client.lastHeartbeatLatency is ${client.lastHeartbeatLatency}`);
 
@@ -867,7 +867,7 @@ describe('WS JSON Server & Client basic', function () {
         (TransportDataUtil as any).HeartbeatPacket = new Uint8Array([0, 0]);
 
         await new Promise(rs => { setTimeout(rs, 2000) });
-        client.logger?.log('lastHeartbeatLatency', client.lastHeartbeatLatency);
+        client.logger?.log('lastHeartbeatLatency %s', client.lastHeartbeatLatency);
         assert.strictEqual(client.status, WsClientStatus.Closed)
         assert.deepStrictEqual(disconnectFlowData, {})
 
@@ -1180,7 +1180,7 @@ describe('WS JSON Flows', function () {
         });
         server.flows.postApiReturnFlow.push(v => {
             flowExecResult.postApiReturnFlow = true;
-            v.call.logger.log('RETTT', v.return);
+            v.call.logger.log('RETTT %s', v.return);
             return v;
         })
 
@@ -1233,7 +1233,7 @@ describe('WS JSON Flows', function () {
         });
         client.flows.postApiReturnFlow.push(v => {
             flowExecResult.postApiReturnFlow = true;
-            client.logger?.log('RETTT', v.return);
+            client.logger?.log('RETTT %s', v.return);
             return v;
         })
 
@@ -1293,14 +1293,14 @@ describe('WS JSON Flows', function () {
         });
         await client.connect();
         client.flows.preSendDataFlow.push(v => {
-            v.data = (v.data as string).split('').reverse().join('');
+            v.data = (v.data as string).slice(1);
             return v;
         });
 
         let ret = await client.callApi('Test', { name: 'XXX' });
         assert.deepStrictEqual(ret, {
             isSucc: false,
-            err: new TsrpcError('Input is not a valid JSON string: Unexpected token ] in JSON at position 0', { type: TsrpcErrorType.NetworkError, code: 'LOST_CONN' })
+            err: new TsrpcError('Input is not a valid JSON string: Unexpected non-whitespace character after JSON at position 6', { type: TsrpcErrorType.NetworkError, code: 'LOST_CONN' })
         })
 
         await server.stop();

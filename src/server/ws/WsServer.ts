@@ -124,14 +124,14 @@ export class WsServer<ServiceType extends BaseServiceType = any> extends BaseSer
         this.connections.push(conn);
         this._id2Conn[conn.id] = conn;
 
-        this.options.logConnect && conn.logger.log(chalk.green('[Connected]'), `ActiveConn=${this.connections.length}`);
+        this.options.logConnect && conn.logger.log(chalk.green('[Connected]') + `ActiveConn=${this.connections.length}`);
         this.flows.postConnectFlow.exec(conn, conn.logger);
     };
 
     private _onClientClose = async (conn: WsConnection<ServiceType>, code: number, reason: string) => {
         this.connections.removeOne(v => v.id === conn.id);
         delete this._id2Conn[conn.id];
-        this.options.logConnect && conn.logger.log(chalk.green('[Disconnected]'), `Code=${code} ${reason ? `Reason=${reason} ` : ''}ActiveConn=${this.connections.length}`)
+        this.options.logConnect && conn.logger.log(chalk.green('[Disconnected]') + `Code=${code} ${reason ? `Reason=${reason} ` : ''}ActiveConn=${this.connections.length}`)
 
         await this.flows.postDisconnectFlow.exec({ conn: conn, reason: reason }, conn.logger);
     }
@@ -158,14 +158,14 @@ export class WsServer<ServiceType extends BaseServiceType = any> extends BaseSer
         }
 
         if (this.status !== ServerStatus.Opened) {
-            this.logger.warn('[BroadcastMsgErr]', `[${msgName}]`, `[To:${connStr()}]`, 'Server not open');
+            this.logger.warn(`[BroadcastMsgErr] [${msgName}] [To:${connStr()}] Server not open`);
             return { isSucc: false, errMsg: 'Server not open' };
         }
 
         // GetService
         let service = this.serviceMap.msgName2Service[msgName as string];
         if (!service) {
-            this.logger.warn('[BroadcastMsgErr]', `[${msgName}]`, `[To:${connStr()}]`, 'Invalid msg name: ' + msgName);
+            this.logger.warn(`[BroadcastMsgErr] [${msgName}] [To:${connStr()}] Invalid msg name: ` + msgName);
             return { isSucc: false, errMsg: 'Invalid msg name: ' + msgName };
         }
 
@@ -188,11 +188,11 @@ export class WsServer<ServiceType extends BaseServiceType = any> extends BaseSer
         // 测试一下编码可以通过
         let op = conns.some(v => v.dataType === 'buffer') ? getOpEncodeBuf() : getOpEncodeText();
         if (!op.isSucc) {
-            this.logger.warn('[BroadcastMsgErr]', `[${msgName}]`, `[To:${connStr()}]`, op.errMsg);
+            this.logger.warn(`[BroadcastMsgErr] [${msgName}] [To:${connStr()}] ${op.errMsg}`);
             return op;
         }
 
-        this.options.logMsg && this.logger.log(`[BroadcastMsg]`, `[${msgName}]`, `[To:${connStr()}]`, msg);
+        this.options.logMsg && this.logger.log(`[BroadcastMsg] [${msgName}] [To:${connStr()}] ${msg}`);
 
         // Batch send
         let errMsgs: string[] = [];
@@ -200,7 +200,7 @@ export class WsServer<ServiceType extends BaseServiceType = any> extends BaseSer
             // Pre Flow
             let pre = await this.flows.preSendMsgFlow.exec({ conn: conn, service: service!, msg: msg }, this.logger);
             if (!pre) {
-                conn.logger.debug('[preSendMsgFlow]', 'Canceled');
+                conn.logger.debug('[preSendMsgFlow] Canceled');
                 return { isSucc: false, errMsg: 'Prevented by preSendMsgFlow' };
             }
             msg = pre.msg;

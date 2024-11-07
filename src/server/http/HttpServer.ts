@@ -10,7 +10,7 @@ import { HttpConnection } from './HttpConnection';
  * TSRPC Server, based on HTTP connection.
  * @typeParam ServiceType - `ServiceType` from generated `proto.ts`
  */
-export class HttpServer<ServiceType extends BaseServiceType = any> extends BaseServer<ServiceType>{
+export class HttpServer<ServiceType extends BaseServiceType = any> extends BaseServer<ServiceType> {
     readonly options!: HttpServerOptions<ServiceType>;
 
     constructor(proto: ServiceProto<ServiceType>, options?: Partial<HttpServerOptions<ServiceType>>) {
@@ -120,7 +120,8 @@ export class HttpServer<ServiceType extends BaseServiceType = any> extends BaseS
                     }
                     // 非Abort，异常中断：直到连接关闭，Client也未end
                     else if (!conn.httpReq.rawBody) {
-                        conn.logger.warn('Socket closed before request end', {
+                        conn.logger.warn({
+                            msg: 'Socket closed before request end',
                             url: httpReq.url,
                             method: httpReq.method,
                             ip: ip,
@@ -174,7 +175,7 @@ export class HttpServer<ServiceType extends BaseServiceType = any> extends BaseS
                 this.httpServer = undefined;
 
                 if (err) {
-                    this.logger.error(err);
+                    this.logger.error({ err });
                 }
                 this.logger.log('Server stopped');
                 rs();

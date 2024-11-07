@@ -416,7 +416,7 @@ describe('HTTP JSON Server & Client basic', function () {
                 });
 
                 setTimeout(() => {
-                    client.logger?.log('sn', sn, name, abort, ret)
+                    client.logger?.log({ sn, name, abort, ret })
                     if (abort) {
                         assert.strictEqual(ret, undefined);
                     }
@@ -824,7 +824,7 @@ describe('HTTP JSON Flows', function () {
         });
         server.flows.postApiReturnFlow.push(v => {
             flowExecResult.postApiReturnFlow = true;
-            v.call.logger.log('RETTT', v.return);
+            v.call.logger.log('RETTT %s', v.return);
             return v;
         })
 
@@ -876,7 +876,7 @@ describe('HTTP JSON Flows', function () {
         });
         client.flows.postApiReturnFlow.push(v => {
             flowExecResult.postApiReturnFlow = true;
-            client.logger?.log('RETTT', v.return);
+            client.logger?.log('RETTT %s', v.return);
             return v;
         })
 
@@ -934,14 +934,14 @@ describe('HTTP JSON Flows', function () {
             logger: clientLogger
         });
         client.flows.preSendDataFlow.push(v => {
-            v.data = (v.data as string).split('').reverse().join('');
+            v.data = (v.data as string).slice(1);
             return v;
         });
 
         let ret = await client.callApi('Test', { name: 'XXX' });
         assert.deepStrictEqual(ret, {
             isSucc: false,
-            err: new TsrpcError('Input is not a valid JSON string: Unexpected token } in JSON at position 0', {
+            err: new TsrpcError('Input is not a valid JSON string: Unexpected non-whitespace character after JSON at position 6', {
                 type: TsrpcErrorType.ServerError,
                 code: 'INPUT_DATA_ERR'
             })

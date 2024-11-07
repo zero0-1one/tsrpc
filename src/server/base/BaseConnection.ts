@@ -63,13 +63,13 @@ export abstract class BaseConnection<ServiceType extends BaseServiceType = any> 
         // debugBuf log
         if (this.server.options.debugBuf) {
             if (typeof data === 'string') {
-                (call?.logger ?? this.logger)?.debug(`[SendText] length=${data.length}`, data);
+                (call?.logger ?? this.logger)?.debug(`[SendText] length=${data.length} %s`, data);
             }
             else if (data instanceof Uint8Array) {
-                (call?.logger ?? this.logger)?.debug(`[SendBuf] length=${data.length}`, data);
+                (call?.logger ?? this.logger)?.debug(`[SendBuf] length=${data.length} %s`, data);
             }
             else {
-                (call?.logger ?? this.logger)?.debug('[SendJSON]', data);
+                (call?.logger ?? this.logger)?.debug('[SendJSON] %s', data);
             }
         }
 
@@ -103,20 +103,20 @@ export abstract class BaseConnection<ServiceType extends BaseServiceType = any> 
      */
     async sendMsg<T extends string & keyof ServiceType['msg']>(msgName: T, msg: ServiceType['msg'][T]): ReturnType<BaseConnection['sendData']> {
         if (this.type === 'SHORT') {
-            this.logger.warn('[SendMsgErr]', `[${msgName}]`, 'Short connection cannot sendMsg');
+            this.logger.warn(`[SendMsgErr] [${msgName}] Short connection cannot sendMsg`);
             return { isSucc: false, errMsg: 'Short connection cannot sendMsg' }
         }
 
         let service = this.server.serviceMap.msgName2Service[msgName as string];
         if (!service) {
-            this.logger.warn('[SendMsgErr]', `[${msgName}]`, `Invalid msg name: ${msgName}`);
+            this.logger.warn(`[SendMsgErr] [${msgName}] Invalid msg name: ${msgName}`);
             return { isSucc: false, errMsg: `Invalid msg name: ${msgName}` }
         }
 
         // Pre Flow
         let pre = await this.server.flows.preSendMsgFlow.exec({ conn: this, service: service, msg: msg }, this.logger);
         if (!pre) {
-            this.logger.debug('[preSendMsgFlow]', 'Canceled');
+            this.logger.debug('[preSendMsgFlow] Canceled');
             return { isSucc: false, errMsg: 'Canceled by preSendMsgFlow', canceledByFlow: 'preSendMsgFlow' };
         }
         msg = pre.msg;
@@ -124,12 +124,12 @@ export abstract class BaseConnection<ServiceType extends BaseServiceType = any> 
         // Encode
         let opServerOutput = TransportDataUtil.encodeServerMsg(this.server.tsbuffer, service, msg, this.dataType, this.type);
         if (!opServerOutput.isSucc) {
-            this.logger.warn('[SendMsgErr]', `[${msgName}]`, opServerOutput.errMsg);
+            this.logger.warn('[SendMsgErr] [%s] %s', msgName, opServerOutput.errMsg);
             return opServerOutput;
         }
 
         // Do send!
-        this.server.options.logMsg && this.logger.log(chalk.cyan.underline(`[Msg:${msgName}]`), chalk.green('[SendMsg]'), msg);
+        this.server.options.logMsg && this.logger.log('%s %s %s', chalk.cyan.underline(`[Msg:${msgName}]`), chalk.green('[SendMsg]'), msg);
         let opSend = await this.sendData(opServerOutput.output);
         if (!opSend.isSucc) {
             return opSend;

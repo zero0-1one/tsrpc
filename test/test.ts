@@ -7,7 +7,7 @@ let server = new HttpServer(serviceProto, {
 });
 
 server.implementApi('a/b/c/Test', call => {
-    call.logger.log('xxx', call.req);
+    call.logger.log({ msg: 'xxx', req: call.req });
     call.succ({
         reply: 'xxxxxxxxxxx',
         aasdg: 'd',

@@ -17,7 +17,7 @@ import { MsgCall } from './MsgCall';
  * Implement on a transportation protocol (like HTTP WebSocket) by extend it.
  * @typeParam ServiceType - `ServiceType` from generated `proto.ts`
  */
-export abstract class BaseServer<ServiceType extends BaseServiceType = BaseServiceType>{
+export abstract class BaseServer<ServiceType extends BaseServiceType = BaseServiceType> {
     /**
      * Start the server
      * @throws
@@ -147,12 +147,12 @@ export abstract class BaseServer<ServiceType extends BaseServiceType = BaseServi
         }
         this._isUncaughtExceptionProcessed = true;
 
-        process.on('uncaughtException', e => {
-            logger.error('[uncaughtException]', e);
+        process.on('uncaughtException', err => {
+            logger.error({ msg: '[uncaughtException]', err });
         });
 
-        process.on('unhandledRejection', e => {
-            logger.error('[unhandledRejection]', e);
+        process.on('unhandledRejection', err => {
+            logger.error({ msg: '[unhandledRejection]', err });
         });
     }
 
@@ -205,7 +205,7 @@ export abstract class BaseServer<ServiceType extends BaseServiceType = BaseServi
                 }
             }
             else {
-                call.logger.error('postApiCallFlow Error:', e);
+                call.logger.error({ msg: 'postApiCallFlow Error:', err: e });
             }
         };
         this.flows.preApiReturnFlow.onError = (e, last) => {
@@ -244,13 +244,13 @@ export abstract class BaseServer<ServiceType extends BaseServiceType = BaseServi
         // debugBuf log
         if (this.options.debugBuf) {
             if (typeof data === 'string') {
-                conn.logger?.debug(`[RecvText] length=${data.length}`, data);
+                conn.logger?.debug({ msg: `[RecvText] length=${data.length}`, data });
             }
             else if (data instanceof Uint8Array) {
-                conn.logger?.debug(`[RecvBuf] length=${data.length}`, data);
+                conn.logger?.debug({ msg: `[RecvBuf] length=${data.length}`, data });
             }
             else {
-                conn.logger?.debug('[RecvJSON]', data);
+                conn.logger?.debug({ msg: '[RecvJSON]', data });
             }
         }
 
@@ -342,7 +342,7 @@ export abstract class BaseServer<ServiceType extends BaseServiceType = BaseServi
         call = preFlow;
 
         // exec ApiCall
-        call.logger.log(chalk.green('[ApiReq]'), this.options.logReqBody ? call.req : '');
+        call.logger.log({ msg: chalk.green('[ApiReq]'), req: this.options.logReqBody ? call.req : undefined });
         let { handler } = await this.getApiHandler(call.service, this._delayImplementApiPath, call.logger);
         // exec API handler
         if (handler) {
@@ -386,13 +386,13 @@ export abstract class BaseServer<ServiceType extends BaseServiceType = BaseServi
         // Pre Flow
         let preFlow = await this.flows.preMsgCallFlow.exec(call, call.logger);
         if (!preFlow) {
-            call.logger.debug('[preMsgCallFlow]', 'Canceled')
+            call.logger.debug('[preMsgCallFlow] Canceled')
             return;
         }
         call = preFlow;
 
         // MsgHandler
-        this.options.logMsg && call.logger.log(chalk.green('[RecvMsg]'), call.msg);
+        this.options.logMsg && call.logger.log(chalk.green('[RecvMsg]') + call.msg);
         let promises = [
             // Conn Handlers
             ...(call.conn['_msgHandlers']?.forEachHandler(call.service.name, call.logger, call) ?? []),
@@ -400,7 +400,7 @@ export abstract class BaseServer<ServiceType extends BaseServiceType = BaseServi
             this._msgHandlers.forEachHandler(call.service.name, call.logger, call)
         ];
         if (!promises.length) {
-            this.logger.debug('[UNHANDLED_MSG]', call.service.name);
+            this.logger.debug('[UNHANDLED_MSG] %s', call.service.name);
         }
         else {
             await Promise.all(promises);
@@ -489,9 +489,9 @@ export abstract class BaseServer<ServiceType extends BaseServiceType = BaseServi
         try {
             var handlerModule = await import(modulePath);
         }
-        catch (e: unknown) {
-            this.logger.error(chalk.red(`Implement API ${chalk.cyan.underline(`${svc.name}`)} failed:`), e);
-            return { errMsg: (e as Error).message };
+        catch (err: unknown) {
+            this.logger.error({ msg: chalk.red(`Implement API ${chalk.cyan.underline(`${svc.name}`)} failed:`), err });
+            return { errMsg: (err as Error).message };
         }
 
         // 优先 default，其次 ApiName 同名
@@ -558,13 +558,13 @@ export abstract class BaseServer<ServiceType extends BaseServiceType = BaseServi
     async onInputDataError(errMsg: string, conn: BaseConnection<ServiceType>, data: string | Uint8Array | object) {
         if (this.options.debugBuf) {
             if (typeof data === 'string') {
-                conn.logger.error(`[InputDataError] ${errMsg} length = ${data.length}`, data)
+                conn.logger.error({ msg: `[InputDataError] ${errMsg}`, length: data.length, data })
             }
             else if (data instanceof Uint8Array) {
-                conn.logger.error(`[InputBufferError] ${errMsg} length = ${data.length}`, data.subarray(0, 16))
+                conn.logger.error({ msg: `[InputBufferError] ${errMsg}`, length: data.length, data: data.subarray(0, 16) })
             }
             else {
-                conn.logger.error(`[InputJsonError] ${errMsg} `, data)
+                conn.logger.error({ msg: `[InputJsonError] ${errMsg} `, data })
             }
         }
 
@@ -604,7 +604,7 @@ export abstract class BaseServer<ServiceType extends BaseServiceType = BaseServi
      * If `returnInnerError` is `true`, the original error would be returned as `innerErr` property.
      */
     onInternalServerError(err: { message: string, stack?: string, name?: string }, call: ApiCall) {
-        call.logger.error(err);
+        call.logger.error({ err });
         call.error('Internal Server Error', {
             code: 'INTERNAL_ERR',
             type: TsrpcErrorType.ServerError,
@@ -677,7 +677,7 @@ export abstract class BaseServer<ServiceType extends BaseServiceType = BaseServi
             let service = this.serviceMap.apiName2Service[apiName as string];
             if (!service) {
                 let errMsg = `Cannot find service: ${apiName}`;
-                this.logger.warn(`[callApi]`, errMsg);
+                this.logger.warn(`[callApi] %s`, errMsg);
                 rs({ isSucc: false, err: new TsrpcError(errMsg, { type: TsrpcErrorType.ServerError, code: 'ERR_API_NAME' }) });
                 return;
             }

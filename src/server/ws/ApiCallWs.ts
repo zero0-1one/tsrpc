@@ -17,7 +17,7 @@ export class ApiCallWs<Req = any, Res = any, ServiceType extends BaseServiceType
 
     protected async _prepareReturn(ret: ApiReturn<Res>): Promise<void> {
         if (this.conn.status !== ConnectionStatus.Opened) {
-            this.logger.debug('[SendReturnErr]', 'WebSocket is not opened', ret);
+            this.logger.debug('[SendReturnErr] WebSocket is not opened %s', ret);
             this._return = ret;
             return;
         }

@@ -18,24 +18,34 @@ export class PrefixLogger implements Logger {
         this.prefixs = options.prefixs;
     }
 
-    getPrefix(): string[] {
-        return this.prefixs.map(v => typeof v === 'string' ? v : v());
+    private mergeArgs(prefix: string, args: any[]): any[] {
+        if (prefix == ' ' || args.length == 0) return args
+        if (typeof args[0] === 'object') {
+            args[0].prefix = prefix
+        } else {
+            args.unshift({ prefix })
+        }
+        return args
+    }
+
+    getPrefix(): string {
+        return this.prefixs.map(v => typeof v === 'string' ? v : v()).join(' ');
     }
 
     log(...args: any[]) {
-        this.logger.log(...this.getPrefix().concat(args));
+        this.logger.log(...this.mergeArgs(this.getPrefix(), args));
     }
 
     debug(...args: any[]) {
-        this.logger.debug(...this.getPrefix().concat(args));
+        this.logger.debug(...this.mergeArgs(this.getPrefix(), args));
     }
 
     warn(...args: any[]) {
-        this.logger.warn(...this.getPrefix().concat(args));
+        this.logger.warn(...this.mergeArgs(this.getPrefix(), args));
     }
 
     error(...args: any[]) {
-        this.logger.error(...this.getPrefix().concat(args));
+        this.logger.error(...this.mergeArgs(this.getPrefix(), args));
     }
 
 }

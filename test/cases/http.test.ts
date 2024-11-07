@@ -397,7 +397,7 @@ describe('HTTP Server & Client basic', function () {
                 });
 
                 setTimeout(() => {
-                    client.logger?.log('sn', sn, name, abort, ret)
+                    client.logger?.log({ sn, name, abort, ret })
                     if (abort) {
                         assert.strictEqual(ret, undefined);
                     }
@@ -802,7 +802,7 @@ describe('HTTP Flows', function () {
         });
         server.flows.postApiReturnFlow.push(v => {
             flowExecResult.postApiReturnFlow = true;
-            v.call.logger.log('RETTT', v.return);
+            v.call.logger.log('RETTT %s', v.return);
             return v;
         })
 
@@ -851,7 +851,7 @@ describe('HTTP Flows', function () {
         });
         client.flows.postApiReturnFlow.push(v => {
             flowExecResult.postApiReturnFlow = true;
-            client.logger?.log('RETTT', v.return);
+            client.logger?.log('RETTT %s', v.return);
             return v;
         })
 

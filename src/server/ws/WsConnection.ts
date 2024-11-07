@@ -62,7 +62,7 @@ export class WsConnection<ServiceType extends BaseServiceType = any> extends Bas
             await options.onClose(this, e.code, e.reason);
             this._rsClose?.();
         };
-        this.ws.onerror = e => { this.logger.warn('[ClientErr]', e.error) };
+        this.ws.onerror = e => { this.logger.warn({ msg: '[ClientErr]', err: e.error }) };
         this.ws.onmessage = e => {
             let data: Buffer | string;
             if (e.data instanceof ArrayBuffer) {
@@ -80,7 +80,7 @@ export class WsConnection<ServiceType extends BaseServiceType = any> extends Bas
 
             // 心跳包，直接回复
             if (data instanceof Buffer && data.equals(TransportDataUtil.HeartbeatPacket)) {
-                this.server.options.debugBuf && this.logger.log('[Heartbeat] Recv ping and send pong', TransportDataUtil.HeartbeatPacket);
+                this.server.options.debugBuf && this.logger.log({ msg: '[Heartbeat] Recv ping and send pong', packet: TransportDataUtil.HeartbeatPacket });
                 this._lastHeartbeatTime = Date.now();
                 this.ws.send(TransportDataUtil.HeartbeatPacket);
                 return;

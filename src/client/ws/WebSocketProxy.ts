@@ -40,7 +40,7 @@ export class WebSocketProxy implements IWebSocketProxy {
         return new Promise(rs => {
             this._ws?.send(data, err => {
                 if (err) {
-                    this.options.logger?.error('WebSocket Send Error:', err);
+                    this.options.logger?.error({ msg: 'WebSocket Send Error:', err });
                     rs({
                         err: new TsrpcError('Network Error', {
                             code: 'SEND_BUF_ERR',

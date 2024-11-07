@@ -9,8 +9,8 @@ let server = new TsrpcServer({
 server.dataFlow.push((data, conn) => {
     let httpReq = conn.options.httpReq;
     if (httpReq.method === 'GET') {
-        conn.logger.log('url', httpReq.url);
-        conn.logger.log('host', httpReq.headers.host);
+        conn.logger.log('url %s', httpReq.url);
+        conn.logger.log('host %s', httpReq.headers.host);
         conn.options.httpRes.end('Hello~~~');
         return false;
     }
